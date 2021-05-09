@@ -13,9 +13,13 @@ import java.util.List;
 @Component
 public interface UdroDocumentRepository extends JpaRepository<UdroDocument, String> {
     UdroDocument findByTableName(String tableName);
-
+    UdroDocument findByFirstTableName(String firstTableName);
+    List<UdroDocument> findAllBySecondTableName(String secondName);
     List<UdroDocument> findAll();
 
     @Transactional
     void deleteByTableName(String tableName);
+
+    @Transactional
+    void deleteByFirstTableName(String firstName);
 }

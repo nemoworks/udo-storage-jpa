@@ -1,45 +1,45 @@
 package info.nemoworks.udo.repository.manager;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import info.nemoworks.udo.repository.model.UTuple;
-import net.sf.json.*;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Stack;
-
-//import javafx.util.Pair;
-//import org.json.JSONObject;
 
 /*
 Translate JSON to Tuples
  */
+//@SpringBootTest
 public class Translate {
     private List<UTuple> UTuples;
-    private JSONObject JsonObject;
+    private ObjectNode objectNode;
     private int uid;
 
-    public Translate(JSONObject JsonObject) {
+    public Translate(ObjectNode objectNode) {
         this.UTuples = new ArrayList<>();
         this.uid = 0;
-        this.JsonObject = JsonObject;
+        this.objectNode = objectNode;
     }
 
     public Translate(List<UTuple> UTuples) {
         this.UTuples = UTuples;
         this.uid = 0;
-        this.JsonObject = new JSONObject();
+        ObjectMapper mapper = new ObjectMapper();
+        this.objectNode = mapper.createObjectNode();
     }
 
     public void startTrans() {
         this.UTuples = new ArrayList<>();
         this.uid = 0;
-        this.translatingObj(this.JsonObject, "");
+        this.translatingObj(this.objectNode, "");
     }
 
     public void startBackTrans() {
-        this.JsonObject = new JSONObject();
+        ObjectMapper mapper = new ObjectMapper();
+        this.objectNode = mapper.createObjectNode();
         this.backTranslatingTuple(this.UTuples);
     }
 
@@ -58,7 +58,7 @@ public class Translate {
     }
 
     private void backTranslatingEle(UTuple uTuple) {
-        this.JsonObject.put(uTuple.getName(), uTuple.getVal());
+        this.objectNode.put(uTuple.getName(), uTuple.getVal());
     }
 
     /**
@@ -71,15 +71,20 @@ public class Translate {
 
         // 通过逆转String的方式获得分割点"."的位置
         StringBuffer sb = new StringBuffer(prefix);
-        String reverse = sb.reverse().toString();
+        String reverse = new StringBuffer(prefix).reverse().toString();
+
         int endIndex = prefix.length() - reverse.indexOf(".");
+
         String objName = prefix.substring(endIndex);
-        JSONObject obj = new JSONObject();
+
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode obj = mapper.createObjectNode();
+
         obj.put(objName, uTuple.getVal());
         String pPrefix = prefix.substring(0, endIndex - 1);
         // 两个栈分别存储当前object的key值即name与当前object的实际内容JSONObject
         Stack<String> nameStack = new Stack<>();
-        Stack<JSONObject> objectStack = new Stack<>();
+        Stack<JsonNode> objectStack = new Stack<>();
         nameStack.push(objName);
         objectStack.push(obj);
         while (!pPrefix.equals("") && !pPrefix.equals(pPrefix.substring(0, 0))) {
@@ -90,24 +95,24 @@ public class Translate {
             objName = pPrefix.substring(endIndex);
             if (endIndex == 0) pPrefix = pPrefix.substring(0, 0);
             else pPrefix = pPrefix.substring(0, endIndex - 1);
-            JSONObject nObj = new JSONObject();
+            ObjectNode nObj = mapper.createObjectNode();
             nObj.put(objName, obj);
             obj = nObj;
             nameStack.push(objName);
             objectStack.push(obj);
         }
-        if (!this.JsonObject.containsKey(objName)) {
+        if (!this.objectNode.has(objName)) {
             // 如果当前key值为一个新值，表明是新节点加入，直接加进结果内即可
-            this.JsonObject.put(objName, obj.getJSONObject(objName));
+            this.objectNode.put(objName, obj.get(objName));
         } else {
             // 如果当前key值为一个旧值(已有值)，则需要找到当前分支在哪个后续节点添加了更新
             // 使用packUpObj()寻找到被更新的节点并打包返回完成更新
-            JSONObject fatherObj = this.JsonObject.getJSONObject(objName); //获取JsonObject中已经存在的obj
-            JSONObject lObj = new JSONObject();
+            JsonNode fatherObj = this.objectNode.get(objName); //获取objectNode中已经存在的obj
+            ObjectNode lObj = mapper.createObjectNode();
             lObj.put(objName, fatherObj);
-            JSONObject obj2put = packUpObj(lObj, nameStack, objectStack);
+            JsonNode obj2put = packUpObj(lObj, nameStack, objectStack);
             // put方法会覆盖原有key，达到更新的目的
-            this.JsonObject.put(objName, obj2put);
+            this.objectNode.put(objName, obj2put);
         }
     }
 
@@ -119,18 +124,18 @@ public class Translate {
      * @param objStack  存储下层节点内容
      * @return 填充完成的Obj
      */
-    private JSONObject packUpObj(JSONObject fatherObj, Stack<String> nameStack, Stack<JSONObject> objStack) {
+    private JsonNode packUpObj(JsonNode fatherObj, Stack<String> nameStack, Stack<JsonNode> objStack) {
         String curName = nameStack.pop();
-        JSONObject curObj = objStack.pop();
-        if (!fatherObj.containsKey(curName)) {
+        JsonNode curObj = objStack.pop();
+        if (!fatherObj.has(curName)) {
             // 此时找到了更新所在的节点，终止递归并回溯，打包成一个完整的JSONObj返回
-            if (curObj.get(curName) instanceof String)
-                fatherObj.put(curName, curObj.getString(curName));
-            else fatherObj.put(curName, curObj.get(curName));
+            if (!(curObj.get(curName).isObject()) && !(curObj.get(curName).isArray()))
+                ((ObjectNode)fatherObj).put(curName, curObj.get(curName));
+            else ((ObjectNode)fatherObj).put(curName, curObj.get(curName));
             return fatherObj;
         } else {
             // 仍未找到更新节点，继续向下递归
-            return (JSONObject) fatherObj.put(curName, packUpObj(fatherObj.getJSONObject(curName), nameStack, objStack));
+            return ((ObjectNode)fatherObj).put(curName, packUpObj(fatherObj.get(curName), nameStack, objStack));
         }
     }
 
@@ -146,13 +151,14 @@ public class Translate {
         String reverse = sb.reverse().toString();
         int endIndex = prefix.length() - reverse.indexOf(".");
         String objName = prefix.substring(endIndex);
-        JSONObject obj = new JSONObject();
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode obj = mapper.createObjectNode();
         obj.put(objName, uTuple.getVal());
         String pPrefix = prefix.substring(0, endIndex - 1);
         Stack<String> nameStack = new Stack<>();
         // 此时的SimpleEntry是JDK 12的用法, 与JDK 8的Pair同理，构成键值对
         // 用来指示当前处理的节点是JSONObject还是JSONArray类型
-        Stack<SimpleEntry<JSONObject, String>> objectStack = new Stack<>();
+        Stack<SimpleEntry<JsonNode, String>> objectStack = new Stack<>();
         nameStack.push(objName);
         objectStack.push(new SimpleEntry<>(obj, "Object"));
         // 考虑 Object 与 Array 互相嵌套的 5 种情况, 由于[]符号的加入, 情况判断变得复杂
@@ -166,41 +172,41 @@ public class Translate {
                 String ObjName = pPrefix;
                 nameStack.push(ObjName);
                 pPrefix = pPrefix.substring(0, 0);
-                JSONObject JsonObject = new JSONObject();
-                JsonObject.put(ObjName, obj);
-                objectStack.push(new SimpleEntry<>(JsonObject, "Object"));
-                obj = JsonObject;
+                ObjectNode objectNode = mapper.createObjectNode();
+                objectNode.put(ObjName, obj);
+                objectStack.push(new SimpleEntry<>(objectNode, "Object"));
+                obj = objectNode;
                 objName = ObjName;
             } else if (indexDot == -1) { // 根节点，形如a[x]
                 String ArrName = pPrefix.substring(0, pPrefix.indexOf("["));
                 nameStack.push(ArrName);
                 pPrefix = pPrefix.substring(0, 0);
-                JSONArray jsonArray = new JSONArray();
-                jsonArray.add(obj);
-                obj = new JSONObject();
+                ArrayNode arrayNode = mapper.createArrayNode();
+                arrayNode.add(obj);
+                obj = mapper.createObjectNode();
                 objName = ArrName;
-                obj.put(objName, jsonArray);
+                obj.put(objName, arrayNode);
                 objectStack.push(new SimpleEntry<>(obj, "Array"));
             } else if (indexArr == -1) { // 形如 a.b.c
                 endIndex = pPrefix.length() - reverse.indexOf(".");
                 String ObjName = pPrefix.substring(endIndex);
                 pPrefix = pPrefix.substring(0, endIndex - 1);
-                JSONObject JsonObject = new JSONObject();
+                ObjectNode objectNode = mapper.createObjectNode();
                 nameStack.push(ObjName);
-                JsonObject.put(ObjName, obj);
-                objectStack.push(new SimpleEntry<>(JsonObject, "Object"));
-                obj = JsonObject;
+                objectNode.put(ObjName, obj);
+                objectStack.push(new SimpleEntry<>(objectNode, "Object"));
+                obj = objectNode;
                 objName = ObjName;
             } else if (indexArr < indexDot) { //形如 c.a[x]
                 endIndex = pPrefix.length() - indexDot;
                 String ArrName = pPrefix.substring(endIndex, pPrefix.length() - indexLeftArr - 1);
                 pPrefix = pPrefix.substring(0, endIndex - 1);
                 nameStack.push(ArrName);
-                JSONArray JsonArray = new JSONArray();
+                ArrayNode JsonArray = mapper.createArrayNode();
                 JsonArray.add(obj);
-                obj = new JSONObject();
+                obj = mapper.createObjectNode();
                 objName = ArrName;
-                ((JSONObject) obj).put(objName, JsonArray);
+                ((ObjectNode) obj).put(objName, JsonArray);
                 objName = ArrName;
                 objectStack.push(new SimpleEntry<>(obj, "Array"));
             } else { //形如 a[x].c
@@ -208,62 +214,63 @@ public class Translate {
                 String ObjName = pPrefix.substring(endIndex);
                 pPrefix = pPrefix.substring(0, endIndex - 1);
                 nameStack.push(ObjName);
-                JSONObject JsonObject = new JSONObject();
-                JsonObject.put(ObjName, obj);
-                objectStack.push(new SimpleEntry<>(JsonObject, "Object"));
+                ObjectNode objectNode = mapper.createObjectNode();
+                objectNode.put(ObjName, obj);
+                objectStack.push(new SimpleEntry<>(objectNode, "Object"));
 
-                obj = JsonObject;
+                obj = objectNode;
                 objName = ObjName;
             }
         }
-        if (!this.JsonObject.containsKey(objName)) {
+        if (!this.objectNode.has(objName)) {
             // 如果当前节点的key为新值，直接将其插入进结果obj
-            this.JsonObject.put(objName, ((JSONObject) obj).get(objName));
+            this.objectNode.put(objName, ((ObjectNode) obj).get(objName));
         } else {
             // 反之，我们使用packUpArray()来完成寻找更新分支并递归打包完成更新的过程
-            Object fatherObj = this.JsonObject.get(objName);
-            JSONObject lObj = new JSONObject();
+            JsonNode fatherObj = this.objectNode.get(objName);
+            ObjectNode lObj = mapper.createObjectNode();
             lObj.put(objName, fatherObj);
-            JSONObject obj2put = packUpArray(lObj, nameStack, objectStack);
-            this.JsonObject.put(objName, obj2put.get(objName));
+            JsonNode obj2put = packUpArray(lObj, nameStack, objectStack);
+            this.objectNode.put(objName, obj2put.get(objName));
         }
     }
 
-    private JSONObject packUpArray(JSONObject fatherObj, Stack<String> nameStack, Stack<SimpleEntry<JSONObject, String>> objStack) {
+    private JsonNode packUpArray(JsonNode fatherObj, Stack<String> nameStack, Stack<SimpleEntry<JsonNode, String>> objStack) {
         String curName = nameStack.pop();
-        SimpleEntry<JSONObject, String> curPair = objStack.pop();
+        SimpleEntry<JsonNode, String> curPair = objStack.pop();
         String curType = curPair.getValue();
-        if (curType.equals("Object")) { // 当前节点为JsonObject
-            if (!(fatherObj).containsKey(curName)) { // 节点中不包含此层定义，说明是新加入的内容，直接添加并返回
-                JSONObject curObj = curPair.getKey();
-                fatherObj.put(curName, curObj.get(curName));
+        if (curType.equals("Object")) { // 当前节点为objectNode
+            if (!(fatherObj).has(curName)) { // 节点中不包含此层定义，说明是新加入的内容，直接添加并返回
+                JsonNode curObj = curPair.getKey();
+                ((ObjectNode)fatherObj).put(curName, curObj.get(curName));
                 return fatherObj;
             } else { // 向下递归
-                fatherObj.put(curName, packUpArray(fatherObj.getJSONObject(curName), nameStack, objStack));
+                ((ObjectNode)fatherObj).put(curName, packUpArray(fatherObj.get(curName), nameStack, objStack));
                 return fatherObj;
             }
         } else { // 当前节点为JsonArray
-            JSONObject curObj = curPair.getKey();
+            JsonNode curObj = curPair.getKey();
             boolean exist = false;
-            JSONObject switchObj = new JSONObject();
+            ObjectMapper mapper = new ObjectMapper();
+            ObjectNode switchObj = mapper.createObjectNode();
             int index = 0;
             String nextName;
-            for (int i = 0; i < ((JSONArray) fatherObj.get(curName)).size(); i++) { // JsonArray的数组元素只可能是JsonObject
+            for (int i = 0; i < ((ArrayNode) fatherObj.get(curName)).size(); i++) { // JsonArray的数组元素只可能是objectNode
                 // 因为就算是Array嵌套Array，也必定会经过一个a:[{b:[{}]}]的形式
-                switchObj = (JSONObject) ((JSONArray) fatherObj.get(curName)).get(i);
+                switchObj = (ObjectNode) ((ArrayNode) fatherObj.get(curName)).get(i);
                 nextName = nameStack.pop();
                 nameStack.push(nextName);
-                if (((JSONObject) switchObj).containsKey(nextName)) {
+                if (((ObjectNode) switchObj).has(nextName)) {
                     exist = true;
                     index = i;
                     break;
                 }
             }
             if (!exist) { // fatherObj代表的Array种不包含与当前处理的Obj节点同名的数组元素，则直接将当前节点加入Array
-                ((JSONArray) fatherObj.get(curName)).add(curObj.get(curName));
+                ((ArrayNode) fatherObj.get(curName)).add(curObj.get(curName));
                 return fatherObj;
             } else { // fatherObj所代表的Array中存在已有定义，向下递归
-                ((JSONArray) fatherObj.get(curName)).set(index, packUpArray(switchObj, nameStack, objStack));
+                ((ArrayNode) fatherObj.get(curName)).set(index, packUpArray(switchObj, nameStack, objStack));
                 return fatherObj;
             }
         }
@@ -276,42 +283,43 @@ public class Translate {
      * @param obj
      * @param suffix
      */
-    private void translatingObj(JSONObject obj, String suffix) {
-        String dot = ".";
-        if (suffix.equals("")) dot = "";
-        for (Object attr : obj.entrySet()) {
-            Map.Entry entry = (Map.Entry) attr;
-            if (entry.getValue() instanceof JSONObject) {
-                translatingObj((JSONObject) entry.getValue(), suffix + dot + entry.getKey().toString());
-            } else if (entry.getValue() instanceof JSONArray) {
-                translatingArr((JSONArray) entry.getValue(), suffix + dot + entry.getKey().toString());
+    private void translatingObj(JsonNode obj, String suffix) {
+        String dot = suffix.equals("")?"": ".";
+//        if (suffix.equals("")) dot = "";
+        for (Iterator<String> it = obj.fieldNames(); it.hasNext(); ) {
+            String attr = it.next();
+//            Map.Entry entry = (Map.Entry) attr;
+            if (obj.get(attr) instanceof ObjectNode) {
+                translatingObj((ObjectNode) obj.get(attr), suffix + dot + attr.toString());
+            } else if (obj.get(attr) instanceof ArrayNode) {
+                translatingArr((ArrayNode) obj.get(attr), suffix + dot + attr.toString());
             } else {
-                UTuples.add(new UTuple(this.uid, suffix + dot + entry.getKey().toString(), entry.getValue().toString()));
+                UTuples.add(new UTuple(this.uid, suffix + dot + attr.toString(), obj.get(attr).toString()));
                 this.uid++;
             }
         }
     }
 
-    private void translatingArr(JSONArray arr, String suffix) {
+    private void translatingArr(ArrayNode arr, String suffix) {
         for (int i = 0; i < arr.size(); i++) {
-            if (arr.get(i) instanceof JSONObject) {
-                translatingObj((JSONObject) arr.get(i), suffix + "[" + String.valueOf(i) + "]");
-            } else if (arr.get(i) instanceof JSONArray) {
-                translatingArr((JSONArray) arr.get(i), suffix + "[" + String.valueOf(i) + "]");
+            if (arr.get(i) instanceof ObjectNode) {
+                translatingObj((ObjectNode) arr.get(i), suffix + "[" + String.valueOf(i) + "]");
+            } else if (arr.get(i) instanceof ArrayNode) {
+                translatingArr((ArrayNode) arr.get(i), suffix + "[" + String.valueOf(i) + "]");
             }
         }
     }
 
-    public JSONObject getJsonObject() {
-        return JsonObject;
+    public ObjectNode getobjectNode() {
+        return objectNode;
     }
 
     public List<UTuple> getUTuples() {
         return UTuples;
     }
 
-    public void setJsonObject(JSONObject JsonObject) {
-        this.JsonObject = JsonObject;
+    public void setobjectNode(ObjectNode objectNode) {
+        this.objectNode = objectNode;
     }
 
     public void setUTuples(List<UTuple> UTuples) {

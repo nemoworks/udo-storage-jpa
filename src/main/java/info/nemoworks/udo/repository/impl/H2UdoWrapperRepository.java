@@ -1,9 +1,12 @@
 package info.nemoworks.udo.repository.impl;
 
-import info.nemoworks.udo.exception.UdoPersistException;
+import info.nemoworks.udo.model.UdoSchema;
+import info.nemoworks.udo.repository.model.UdroSchema;
+import info.nemoworks.udo.storage.UdoNotExistException;
+import info.nemoworks.udo.storage.UdoPersistException;
 import info.nemoworks.udo.model.Udo;
-import info.nemoworks.udo.repository.UdoRepository;
-import info.nemoworks.udo.repository.exception.UdroPersistException;
+import info.nemoworks.udo.storage.UdoRepository;
+//import info.nemoworks.udo.repository.exception.UdroPersistException;
 import info.nemoworks.udo.repository.manager.Translate;
 import info.nemoworks.udo.repository.manager.UdroDocumentManager;
 import info.nemoworks.udo.repository.manager.UdroSchemaManager;
@@ -27,7 +30,7 @@ public class H2UdoWrapperRepository implements UdoRepository {
         List<UTuple> uTuples = udroDocument.getUTuples();
         Translate translate = new Translate(uTuples);
         translate.startBackTrans();
-        return new Udo(udroDocument.getFirstTableName(), udroDocument.getSecondTableName(), translate.getJsonObject());
+        return new Udo(udroDocument.getFirstTableName(), udroDocument.getSecondTableName(), translate.getobjectNode());
     }
 
     private UdoSchema fromUdro2Udo(UdroSchema udroSchema) {
@@ -37,16 +40,16 @@ public class H2UdoWrapperRepository implements UdoRepository {
         Translate translate = new Translate(uTuples);
         translate.startBackTrans();
 //        System.out.println("2Udo: " + translate.getJsonObject().toString());
-        return new UdoSchema(udroSchema.getTableName(), translate.getJsonObject());
+        return new UdoSchema(udroSchema.getTableName(), translate.getobjectNode());
     }
 
     @Override
-    public Udo saveUdo(Udo udo, String schemaId) throws UdoPersistException, UdroPersistException {
+    public Udo saveUdo(Udo udo) throws UdoPersistException {
         UdroDocument table = udroDocumentManager.saveUdo(udo);
 //        List<UTuple> uTuples = table.getUTuples();
 //        Translate translate = new Translate(uTuples);
 //        translate.startBackTrans();
-        String firstTableName = udo.getUdoi();
+        String firstTableName = udo.getId();
         String secondTableName = udo.getSchemaId();
         UdroDocument udroDocument = udroDocumentManager.findByName(firstTableName + "_" + secondTableName);
 //        String jStr = JSON.toJSONString(translate.getJsonObject());
@@ -56,13 +59,19 @@ public class H2UdoWrapperRepository implements UdoRepository {
     }
 
     @Override
-    public Udo findUdo(String udoi, String schemaId) throws UdroPersistException {
-        return this.fromUdro2Udo(udroDocumentManager.findByName(udoi + "_" + schemaId));
+    public Udo sync(Udo udo) throws UdoPersistException {
+        UdroDocument UDRODocument = udroDocumentManager.updateUdo(udo);
+        return this.fromUdro2Udo(UDRODocument);
     }
 
     @Override
-    public List<Udo> findAllUdos(String schemaId) {
-        List<UdroDocument> udroDocuments = udroDocumentManager.findAll();
+    public Udo findUdoById(String id) {
+        return this.fromUdro2Udo(udroDocumentManager.findByFirstName(id));
+    }
+
+    @Override
+    public List<Udo> findUdosBySchema(String schemaId) {
+        List<UdroDocument> udroDocuments = udroDocumentManager.findAllBySecondName(schemaId);
         List<Udo> udos = new ArrayList<>();
         for (UdroDocument udroDocument : udroDocuments) {
             udos.add(this.fromUdro2Udo(udroDocument));
@@ -71,15 +80,8 @@ public class H2UdoWrapperRepository implements UdoRepository {
     }
 
     @Override
-    public void deleteUdo(String udoi, String schemaId) throws UdroPersistException {
-        udroDocumentManager.deleteByName(udoi + "_" + schemaId);
-    }
-
-    @Override
-    public Udo updateUdo(Udo udo, String udoi, String schemaId) throws UdroPersistException {
-        UdroDocument UDRODocument = udroDocumentManager.updateUdo(udo);
-        return this.fromUdro2Udo(UDRODocument);
-//        return null;
+    public void deleteUdoById(String id) throws UdoNotExistException {
+        udroDocumentManager.deleteByFirstName(id);
     }
 
     @Override
@@ -93,14 +95,14 @@ public class H2UdoWrapperRepository implements UdoRepository {
     }
 
     @Override
-    public UdoSchema findSchemaById(String udoi) throws UdroSchemaPersistException {
-        return this.fromUdro2Udo(udroSchemaManager.findByName(udoi));
+    public UdoSchema findSchemaById(String id) {
+        return this.fromUdro2Udo(udroSchemaManager.findByName(id));
     }
 
     @Override
-    public UdoSchema saveSchema(UdoSchema udoSchema) throws UdroSchemaPersistException {
+    public UdoSchema saveSchema(UdoSchema udoSchema) throws UdoPersistException{
         UdroSchema sav = udroSchemaManager.saveUdoSchema(udoSchema);
-        String tableName = udoSchema.getUdoi();
+        String tableName = udoSchema.getId();
         UdroSchema udroSchema = udroSchemaManager.findByName(tableName);
 //        System.out.println("find udroschema: ");
 //        for (UTuple uTuple: udroSchema.getUTuples()) uTuple.printTuple();
@@ -108,13 +110,8 @@ public class H2UdoWrapperRepository implements UdoRepository {
     }
 
     @Override
-    public void deleteSchemaById(String udoi) throws UdroSchemaPersistException {
-        udroSchemaManager.deleteByName(udoi);
+    public void deleteSchemaById(String id) throws UdoNotExistException {
+        udroSchemaManager.deleteByName(id);
     }
 
-    @Override
-    public UdoSchema updateSchema(UdoSchema udoSchema, String udoi) throws UdroSchemaPersistException {
-        UdroSchema udroSchema = udroSchemaManager.updateUdoSchema(udoSchema);
-        return this.fromUdro2Udo(udroSchema);
-    }
 }
