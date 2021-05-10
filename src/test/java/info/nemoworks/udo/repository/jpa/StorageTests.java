@@ -1,13 +1,12 @@
-package info.nemoworks.udo.repository;
+package info.nemoworks.udo.repository.jpa;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import info.nemoworks.udo.model.Udo;
 import info.nemoworks.udo.model.UdoSchema;
-import info.nemoworks.udo.repository.impl.H2UdoWrapperRepository;
-import info.nemoworks.udo.repository.manager.Translate;
-import info.nemoworks.udo.repository.manager.UdroSchemaManager;
+import info.nemoworks.udo.repository.jpa.manager.Translate;
+import info.nemoworks.udo.repository.jpa.manager.UdroSchemaManager;
 import info.nemoworks.udo.storage.UdoNotExistException;
 import info.nemoworks.udo.storage.UdoPersistException;
 import net.sf.json.JSONObject;

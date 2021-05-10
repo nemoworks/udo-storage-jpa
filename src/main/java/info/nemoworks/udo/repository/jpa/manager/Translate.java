@@ -1,10 +1,11 @@
-package info.nemoworks.udo.repository.manager;
+package info.nemoworks.udo.repository.jpa.manager;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import info.nemoworks.udo.repository.model.UTuple;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import info.nemoworks.udo.repository.jpa.entity.UTuple;
 
 import java.util.*;
 import java.util.AbstractMap.SimpleEntry;

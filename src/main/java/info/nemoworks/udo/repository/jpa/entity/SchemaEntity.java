@@ -1,10 +1,19 @@
-package info.nemoworks.udo.repository.model;
+package info.nemoworks.udo.repository.jpa.entity;
 
-import javax.persistence.*;
 import java.util.List;
 
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
+
+import info.nemoworks.udo.model.Udo;
+import info.nemoworks.udo.model.UdoSchema;
+
 @Entity
-public class UdroSchema {
+public class SchemaEntity {
     @Id
     @GeneratedValue
     private int pkey;
@@ -37,5 +46,15 @@ public class UdroSchema {
 
     public void setUTuples(List<UTuple> UTuples) {
         this.UTuples = UTuples;
+    }
+
+    public static SchemaEntity from(UdoSchema schema) {
+        // todo
+        return null;
+    }
+
+    public UdoSchema tUdoSchema() {
+        // todo
+        return null;
     }
 }

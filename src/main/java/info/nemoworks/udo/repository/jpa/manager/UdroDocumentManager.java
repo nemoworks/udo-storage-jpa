@@ -1,10 +1,9 @@
-package info.nemoworks.udo.repository.manager;
+package info.nemoworks.udo.repository.jpa.manager;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import info.nemoworks.udo.model.Udo;
-import info.nemoworks.udo.repository.UdroDocumentRepository;
-//import info.nemoworks.udo.repository.exception.UdroPersistException;
-import info.nemoworks.udo.repository.model.UdroDocument;
+import info.nemoworks.udo.repository.jpa.UdroDocumentRepository;
+import info.nemoworks.udo.repository.jpa.entity.UdroDocument;
 import info.nemoworks.udo.storage.UdoNotExistException;
 import info.nemoworks.udo.storage.UdoPersistException;
 import org.springframework.beans.factory.annotation.Autowired;
