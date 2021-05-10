@@ -1,17 +1,18 @@
-package info.nemoworks.udo.repository.impl;
+package info.nemoworks.udo.repository.jpa;
 
 import info.nemoworks.udo.model.UdoSchema;
-import info.nemoworks.udo.repository.model.UdroSchema;
 import info.nemoworks.udo.storage.UdoNotExistException;
 import info.nemoworks.udo.storage.UdoPersistException;
 import info.nemoworks.udo.model.Udo;
 import info.nemoworks.udo.storage.UdoRepository;
-//import info.nemoworks.udo.repository.exception.UdroPersistException;
-import info.nemoworks.udo.repository.manager.Translate;
-import info.nemoworks.udo.repository.manager.UdroDocumentManager;
-import info.nemoworks.udo.repository.manager.UdroSchemaManager;
-import info.nemoworks.udo.repository.model.UTuple;
-import info.nemoworks.udo.repository.model.UdroDocument;
+import info.nemoworks.udo.repository.jpa.entity.UTuple;
+import info.nemoworks.udo.repository.jpa.entity.UdoEntity;
+import info.nemoworks.udo.repository.jpa.entity.UdroDocument;
+import info.nemoworks.udo.repository.jpa.entity.UdroSchema;
+import info.nemoworks.udo.repository.jpa.manager.Translate;
+import info.nemoworks.udo.repository.jpa.manager.UdroDocumentManager;
+import info.nemoworks.udo.repository.jpa.manager.UdroSchemaManager;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -25,6 +26,10 @@ public class H2UdoWrapperRepository implements UdoRepository {
 
     @Autowired
     private UdroSchemaManager udroSchemaManager;
+
+    
+    @Autowired
+    private UdoEntityRepository udoEntityRepository;
 
     private Udo fromUdro2Udo(UdroDocument udroDocument) {
         List<UTuple> uTuples = udroDocument.getUTuples();
@@ -45,6 +50,10 @@ public class H2UdoWrapperRepository implements UdoRepository {
 
     @Override
     public Udo saveUdo(Udo udo) throws UdoPersistException {
+
+        UdoEntity entity = UdoEntity.fromUdo(udo);
+        udoEntityRepository.save(entity);
+
         UdroDocument table = udroDocumentManager.saveUdo(udo);
 //        List<UTuple> uTuples = table.getUTuples();
 //        Translate translate = new Translate(uTuples);
@@ -112,6 +121,12 @@ public class H2UdoWrapperRepository implements UdoRepository {
     @Override
     public void deleteSchemaById(String id) throws UdoNotExistException {
         udroSchemaManager.deleteByName(id);
+    }
+
+    @Override
+    public List<Udo> findUdosBySchema(UdoSchema schema) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }
