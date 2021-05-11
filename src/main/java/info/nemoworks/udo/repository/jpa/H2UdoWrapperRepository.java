@@ -5,13 +5,10 @@ import info.nemoworks.udo.storage.UdoNotExistException;
 import info.nemoworks.udo.storage.UdoPersistException;
 import info.nemoworks.udo.model.Udo;
 import info.nemoworks.udo.storage.UdoRepository;
-import info.nemoworks.udo.repository.jpa.entity.UTuple;
+import info.nemoworks.udo.repository.jpa.entity.TupleEntity;
 import info.nemoworks.udo.repository.jpa.entity.UdoEntity;
-import info.nemoworks.udo.repository.jpa.entity.UdroDocument;
-import info.nemoworks.udo.repository.jpa.entity.UdroSchema;
+import info.nemoworks.udo.repository.jpa.entity.SchemaEntity;
 import info.nemoworks.udo.repository.jpa.manager.Translate;
-import info.nemoworks.udo.repository.jpa.manager.UdroDocumentManager;
-import info.nemoworks.udo.repository.jpa.manager.UdroSchemaManager;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -21,27 +18,24 @@ import java.util.List;
 
 @Component
 public class H2UdoWrapperRepository implements UdoRepository {
-    @Autowired
-    private UdroDocumentManager udroDocumentManager;
-
-    @Autowired
-    private UdroSchemaManager udroSchemaManager;
-
     
     @Autowired
     private UdoEntityRepository udoEntityRepository;
 
-    private Udo fromUdro2Udo(UdroDocument udroDocument) {
-        List<UTuple> uTuples = udroDocument.getUTuples();
+    @Autowired
+    private SchemaEntityRepository schemaEntityRepository;
+
+    private Udo fromUdro2Udo(UdoEntity udroDocument) {
+        List<TupleEntity> uTuples = udroDocument.getTupleEntitys();
         Translate translate = new Translate(uTuples);
         translate.startBackTrans();
         return new Udo(udroDocument.getFirstTableName(), udroDocument.getSecondTableName(), translate.getobjectNode());
     }
 
-    private UdoSchema fromUdro2Udo(UdroSchema udroSchema) {
-        List<UTuple> uTuples = udroSchema.getUTuples();
+    private UdoSchema fromUdro2Udo(SchemaEntity udroSchema) {
+        List<TupleEntity> uTuples = udroSchema.getTupleEntitys();
 //        System.out.println("translating tuples: ");
-//        for(UTuple uTuple: udroSchema.getUTuples()) uTuple.printTuple();
+//        for(TupleEntity uTuple: udroSchema.getTupleEntitys()) uTuple.printTuple();
         Translate translate = new Translate(uTuples);
         translate.startBackTrans();
 //        System.out.println("2Udo: " + translate.getJsonObject().toString());
@@ -52,24 +46,25 @@ public class H2UdoWrapperRepository implements UdoRepository {
     public Udo saveUdo(Udo udo) throws UdoPersistException {
 
         UdoEntity entity = UdoEntity.fromUdo(udo);
+        assert entity != null;
         udoEntityRepository.save(entity);
 
-        UdroDocument table = udroDocumentManager.saveUdo(udo);
-//        List<UTuple> uTuples = table.getUTuples();
+//        UdoEntity table = udroDocumentManager.saveUdo(udo);
+//        List<TupleEntity> uTuples = table.getTupleEntitys();
 //        Translate translate = new Translate(uTuples);
 //        translate.startBackTrans();
         String firstTableName = udo.getId();
         String secondTableName = udo.getSchemaId();
-        UdroDocument udroDocument = udroDocumentManager.findByName(firstTableName + "_" + secondTableName);
+        UdoEntity udoEntity = udoEntityRepository.findByUdoId(udo.getId());
 //        String jStr = JSON.toJSONString(translate.getJsonObject());
 //        return JSONObject.parseObject(jStr, udo.getClass());
 //        System.out.println("uTable got: " + udro);
-        return this.fromUdro2Udo(udroDocument);
+        return this.fromUdro2Udo(udoEntity);
     }
 
     @Override
     public Udo sync(Udo udo) throws UdoPersistException {
-        UdroDocument UDRODocument = udroDocumentManager.updateUdo(udo);
+        UdoEntity UDRODocument = udroDocumentManager.updateUdo(udo);
         return this.fromUdro2Udo(UDRODocument);
     }
 
@@ -80,9 +75,9 @@ public class H2UdoWrapperRepository implements UdoRepository {
 
     @Override
     public List<Udo> findUdosBySchema(String schemaId) {
-        List<UdroDocument> udroDocuments = udroDocumentManager.findAllBySecondName(schemaId);
+        List<UdoEntity> udroDocuments = udroDocumentManager.findAllBySecondName(schemaId);
         List<Udo> udos = new ArrayList<>();
-        for (UdroDocument udroDocument : udroDocuments) {
+        for (UdoEntity udroDocument : udroDocuments) {
             udos.add(this.fromUdro2Udo(udroDocument));
         }
         return udos;
@@ -95,9 +90,9 @@ public class H2UdoWrapperRepository implements UdoRepository {
 
     @Override
     public List<UdoSchema> findAllSchemas() {
-        List<UdroSchema> schemas = udroSchemaManager.findAll();
+        List<SchemaEntity> schemas = udroSchemaManager.findAll();
         List<UdoSchema> udoSchemas = new ArrayList<>();
-        for (UdroSchema udroSchema : schemas) {
+        for (SchemaEntity udroSchema : schemas) {
             udoSchemas.add(this.fromUdro2Udo(udroSchema));
         }
         return udoSchemas;
@@ -110,11 +105,11 @@ public class H2UdoWrapperRepository implements UdoRepository {
 
     @Override
     public UdoSchema saveSchema(UdoSchema udoSchema) throws UdoPersistException{
-        UdroSchema sav = udroSchemaManager.saveUdoSchema(udoSchema);
+        SchemaEntity sav = udroSchemaManager.saveUdoSchema(udoSchema);
         String tableName = udoSchema.getId();
-        UdroSchema udroSchema = udroSchemaManager.findByName(tableName);
+        SchemaEntity udroSchema = udroSchemaManager.findByName(tableName);
 //        System.out.println("find udroschema: ");
-//        for (UTuple uTuple: udroSchema.getUTuples()) uTuple.printTuple();
+//        for (TupleEntity uTuple: udroSchema.getTupleEntitys()) uTuple.printTuple();
         return fromUdro2Udo(udroSchema);
     }
 

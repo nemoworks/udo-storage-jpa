@@ -18,34 +18,34 @@ public class SchemaEntity {
     @GeneratedValue
     private int pkey;
 
-    private String tableName;
+    private String schemaId;
 
-    @OneToMany(targetEntity = UTuple.class, fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    private List<UTuple> UTuples;
+    @OneToMany(targetEntity = TupleEntity.class, fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    private List<TupleEntity> TupleEntitys;
 
-    public UdroSchema() {
+    public SchemaEntity() {
 
     }
 
-    public UdroSchema(String tableName, List<UTuple> UTuples) {
-        this.tableName = tableName;
-        this.UTuples = UTuples;
+    public SchemaEntity(String schemaId, List<TupleEntity> TupleEntitys) {
+        this.schemaId = schemaId;
+        this.TupleEntitys = TupleEntitys;
     }
 
-    public String getTableName() {
-        return tableName;
+    public String getSchemaId() {
+        return schemaId;
     }
 
-    public void setTableName(String tableName) {
-        this.tableName = tableName;
+    public void setSchemaId(String schemaId) {
+        this.schemaId = schemaId;
     }
 
-    public List<UTuple> getUTuples() {
-        return UTuples;
+    public List<TupleEntity> getTupleEntitys() {
+        return TupleEntitys;
     }
 
-    public void setUTuples(List<UTuple> UTuples) {
-        this.UTuples = UTuples;
+    public void setTupleEntitys(List<TupleEntity> TupleEntitys) {
+        this.TupleEntitys = TupleEntitys;
     }
 
     public static SchemaEntity from(UdoSchema schema) {

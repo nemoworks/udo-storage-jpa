@@ -23,47 +23,30 @@ public class UdoEntity {
     @Lazy
     private SchemaEntity schemaEntity;
 
-    @OneToMany(targetEntity = UTuple.class, fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    private List<UTuple> UTuples;
+    @OneToMany(targetEntity = TupleEntity.class, fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    private List<TupleEntity> TupleEntitys;
 
-    public UdroDocument() {
+    public UdoEntity() {
 
     }
 
-    public UdroDocument(List<UTuple> UTuples, String firstTableName, String secondTableName) {
-        this.UTuples = UTuples;
-        this.firstTableName = firstTableName;
-        this.secondTableName = secondTableName;
-        this.tableName = firstTableName + "_" + secondTableName;
+    public UdoEntity(List<TupleEntity> TupleEntitys, String udoId, SchemaEntity schemaEntity) {
+        this.TupleEntitys = TupleEntitys;
+        this.udoId = udoId;
+        this.schemaEntity = schemaEntity;
+//        this.firstTableName = firstTableName;
+//        this.secondTableName = secondTableName;
+//        this.tableName = firstTableName + "_" + secondTableName;
     }
 
-    public void setUTuples(List<UTuple> UTuples) {
-        this.UTuples = UTuples;
+    public void setTupleEntitys(List<TupleEntity> TupleEntitys) {
+        this.TupleEntitys = TupleEntitys;
     }
 
-    public List<UTuple> getUTuples() {
-        return UTuples;
+    public List<TupleEntity> getTupleEntitys() {
+        return TupleEntitys;
     }
 
-    public String getFirstTableName() {
-        return firstTableName;
-    }
-
-    public String getSecondTableName() {
-        return secondTableName;
-    }
-
-    public void setFirstTableName(String firstTableName) {
-        this.firstTableName = firstTableName;
-    }
-
-    public void setSecondTableName(String secondTableName) {
-        this.secondTableName = secondTableName;
-    }
-
-    public String getTableName() {
-        return tableName;
-    }
 
     // public String getTableName() {
     // return tableName;

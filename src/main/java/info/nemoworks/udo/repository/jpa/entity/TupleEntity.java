@@ -18,18 +18,18 @@ public class TupleEntity {
     
     private String val;
 
-    public UTuple() {
+    public TupleEntity() {
 
     }
 
-    public UTuple(int uid, String name, String val) {
-        this.uid = uid;
+    public TupleEntity(int offset, String name, String val) {
+        this.offset = offset;
         this.name = name;
         this.val = val;
     }
 
-    public int getUid() {
-        return uid;
+    public int getOffset() {
+        return offset;
     }
 
     public String getName() {
@@ -44,8 +44,8 @@ public class TupleEntity {
         this.name = name;
     }
 
-    public void setUid(int uid) {
-        this.uid = uid;
+    public void setOffset(int offset) {
+        this.offset = offset;
     }
 
     public void setVal(String val) {
@@ -53,6 +53,6 @@ public class TupleEntity {
     }
 
     public void printTuple() {
-        System.out.println(this.uid + " " + this.name + " " + this.val);
+        System.out.println(this.offset + " " + this.name + " " + this.val);
     }
 }
