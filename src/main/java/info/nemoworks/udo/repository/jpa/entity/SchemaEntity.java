@@ -5,19 +5,15 @@ import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 
-import info.nemoworks.udo.model.Udo;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import info.nemoworks.udo.model.UdoSchema;
 
 @Entity
 public class SchemaEntity {
     @Id
-    @GeneratedValue
-    private int pkey;
-
     private String schemaId;
 
     @OneToMany(targetEntity = TupleEntity.class, fetch = FetchType.EAGER, cascade = CascadeType.ALL)
@@ -49,12 +45,17 @@ public class SchemaEntity {
     }
 
     public static SchemaEntity from(UdoSchema schema) {
-        // todo
-        return null;
+        Translate translate = new Translate((ObjectNode) schema.getSchema());
+        String schemaId = schema.getId();
+        translate.startTrans();
+        return new SchemaEntity(schemaId, translate.getTupleEntitys());
     }
 
-    public UdoSchema tUdoSchema() {
-        // todo
-        return null;
+    public UdoSchema toUdoSchema() {
+        Translate translate = new Translate(this.getTupleEntitys());
+        translate.startBackTrans();
+        UdoSchema udoSchema = new UdoSchema(translate.getObjectNode());
+        udoSchema.setId(this.schemaId);
+        return udoSchema;
     }
 }

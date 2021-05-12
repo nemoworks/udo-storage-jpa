@@ -5,10 +5,8 @@ import info.nemoworks.udo.storage.UdoNotExistException;
 import info.nemoworks.udo.storage.UdoPersistException;
 import info.nemoworks.udo.model.Udo;
 import info.nemoworks.udo.storage.UdoRepository;
-import info.nemoworks.udo.repository.jpa.entity.TupleEntity;
 import info.nemoworks.udo.repository.jpa.entity.UdoEntity;
 import info.nemoworks.udo.repository.jpa.entity.SchemaEntity;
-import info.nemoworks.udo.repository.jpa.manager.Translate;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -25,103 +23,76 @@ public class H2UdoWrapperRepository implements UdoRepository {
     @Autowired
     private SchemaEntityRepository schemaEntityRepository;
 
-    private Udo fromUdro2Udo(UdoEntity udroDocument) {
-        List<TupleEntity> uTuples = udroDocument.getTupleEntitys();
-        Translate translate = new Translate(uTuples);
-        translate.startBackTrans();
-        return new Udo(udroDocument.getFirstTableName(), udroDocument.getSecondTableName(), translate.getobjectNode());
-    }
-
-    private UdoSchema fromUdro2Udo(SchemaEntity udroSchema) {
-        List<TupleEntity> uTuples = udroSchema.getTupleEntitys();
-//        System.out.println("translating tuples: ");
-//        for(TupleEntity uTuple: udroSchema.getTupleEntitys()) uTuple.printTuple();
-        Translate translate = new Translate(uTuples);
-        translate.startBackTrans();
-//        System.out.println("2Udo: " + translate.getJsonObject().toString());
-        return new UdoSchema(udroSchema.getTableName(), translate.getobjectNode());
-    }
-
     @Override
     public Udo saveUdo(Udo udo) throws UdoPersistException {
-
         UdoEntity entity = UdoEntity.fromUdo(udo);
-        assert entity != null;
+        UdoEntity exist = udoEntityRepository.findByUdoId(entity.getUdoId());
+        if (exist != null) throw new UdoPersistException("Udo" + udo.getId() + "already exists.");
         udoEntityRepository.save(entity);
-
-//        UdoEntity table = udroDocumentManager.saveUdo(udo);
-//        List<TupleEntity> uTuples = table.getTupleEntitys();
-//        Translate translate = new Translate(uTuples);
-//        translate.startBackTrans();
-        String firstTableName = udo.getId();
-        String secondTableName = udo.getSchemaId();
-        UdoEntity udoEntity = udoEntityRepository.findByUdoId(udo.getId());
-//        String jStr = JSON.toJSONString(translate.getJsonObject());
-//        return JSONObject.parseObject(jStr, udo.getClass());
-//        System.out.println("uTable got: " + udro);
-        return this.fromUdro2Udo(udoEntity);
+        return udo;
     }
 
     @Override
     public Udo sync(Udo udo) throws UdoPersistException {
-        UdoEntity UDRODocument = udroDocumentManager.updateUdo(udo);
-        return this.fromUdro2Udo(UDRODocument);
+        UdoEntity udoEntity = UdoEntity.fromUdo(udo);
+        UdoEntity exist = udoEntityRepository.findByUdoId(udoEntity.getUdoId());
+        if (exist != null) throw new UdoPersistException("Udo" + udo.getId() + "already exists.");
+        udoEntityRepository.save(udoEntity);
+        return udo;
     }
 
     @Override
     public Udo findUdoById(String id) {
-        return this.fromUdro2Udo(udroDocumentManager.findByFirstName(id));
+        return udoEntityRepository.findByUdoId(id).toUdo();
     }
 
     @Override
-    public List<Udo> findUdosBySchema(String schemaId) {
-        List<UdoEntity> udroDocuments = udroDocumentManager.findAllBySecondName(schemaId);
+    public List<Udo> findUdosBySchema(UdoSchema udoSchema) {
+        List<UdoEntity> udoEntities = udoEntityRepository.findAllBySchemaEntity(SchemaEntity.from(udoSchema));
         List<Udo> udos = new ArrayList<>();
-        for (UdoEntity udroDocument : udroDocuments) {
-            udos.add(this.fromUdro2Udo(udroDocument));
+        for (UdoEntity udoEntity : udoEntities) {
+            udos.add(udoEntity.toUdo());
         }
         return udos;
     }
 
     @Override
     public void deleteUdoById(String id) throws UdoNotExistException {
-        udroDocumentManager.deleteByFirstName(id);
+        UdoEntity exist = udoEntityRepository.findByUdoId(id);
+        if (exist == null) throw new UdoNotExistException("Udo" + id + "does not exist.");
+        udoEntityRepository.deleteByUdoId(id);
     }
 
     @Override
     public List<UdoSchema> findAllSchemas() {
-        List<SchemaEntity> schemas = udroSchemaManager.findAll();
+        List<SchemaEntity> schemas = schemaEntityRepository.findAll();
         List<UdoSchema> udoSchemas = new ArrayList<>();
-        for (SchemaEntity udroSchema : schemas) {
-            udoSchemas.add(this.fromUdro2Udo(udroSchema));
+        for (SchemaEntity schema : schemas) {
+            udoSchemas.add(schema.toUdoSchema());
         }
         return udoSchemas;
     }
 
     @Override
     public UdoSchema findSchemaById(String id) {
-        return this.fromUdro2Udo(udroSchemaManager.findByName(id));
+        return schemaEntityRepository.findBySchemaId(id).toUdoSchema();
     }
 
     @Override
     public UdoSchema saveSchema(UdoSchema udoSchema) throws UdoPersistException{
-        SchemaEntity sav = udroSchemaManager.saveUdoSchema(udoSchema);
-        String tableName = udoSchema.getId();
-        SchemaEntity udroSchema = udroSchemaManager.findByName(tableName);
-//        System.out.println("find udroschema: ");
-//        for (TupleEntity uTuple: udroSchema.getTupleEntitys()) uTuple.printTuple();
-        return fromUdro2Udo(udroSchema);
+        SchemaEntity schemaEntity = SchemaEntity.from(udoSchema);
+        SchemaEntity exist = schemaEntityRepository.findBySchemaId(schemaEntity.getSchemaId());
+        if (exist != null) throw new UdoPersistException("Schema" + udoSchema.getId() + "already exists.");
+        schemaEntityRepository.save(schemaEntity);
+        return udoSchema;
     }
 
     @Override
     public void deleteSchemaById(String id) throws UdoNotExistException {
-        udroSchemaManager.deleteByName(id);
+        SchemaEntity exist = schemaEntityRepository.findBySchemaId(id);
+        if (exist == null) throw new UdoNotExistException("Schema" + id + "does not exist.");
+        schemaEntityRepository.deleteBySchemaId(id);
     }
 
-    @Override
-    public List<Udo> findUdosBySchema(UdoSchema schema) {
-        // TODO Auto-generated method stub
-        return null;
-    }
 
 }

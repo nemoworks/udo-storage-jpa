@@ -13,12 +13,12 @@ import java.util.List;
 计划实现一个以Entity为实例的关系型数据库持久化层
  */
 @Component
-public interface UdoEntityRepository extends JpaRepository<UdoEntity, Long> {
+public interface UdoEntityRepository extends JpaRepository<UdoEntity, String> {
     UdoEntity findByUdoId(String udoId);
     List<UdoEntity> findAllBySchemaEntity(SchemaEntity schemaEntity);
     List<UdoEntity> findAll();
 
     @Transactional
-    public void deleteByUdoId(Long udoid);
+    void deleteByUdoId(String udoId);
     
 }

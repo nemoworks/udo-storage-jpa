@@ -1,4 +1,4 @@
-package info.nemoworks.udo.repository.jpa.manager;
+package info.nemoworks.udo.repository.jpa.entity;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -311,7 +311,7 @@ public class Translate {
         }
     }
 
-    public ObjectNode getobjectNode() {
+    public ObjectNode getObjectNode() {
         return objectNode;
     }
 
@@ -319,7 +319,7 @@ public class Translate {
         return TupleEntitys;
     }
 
-    public void setobjectNode(ObjectNode objectNode) {
+    public void setObjectNode(ObjectNode objectNode) {
         this.objectNode = objectNode;
     }
 
