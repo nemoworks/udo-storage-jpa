@@ -1,11 +1,11 @@
-package info.nemoworks.udo.repository.jpa.manager;
+package info.nemoworks.udo.repository.jpa.entity;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import info.nemoworks.udo.repository.jpa.entity.UTuple;
+import info.nemoworks.udo.repository.jpa.entity.TupleEntity;
 
 import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
@@ -15,25 +15,25 @@ Translate JSON to Tuples
  */
 //@SpringBootTest
 public class Translate {
-    private List<UTuple> UTuples;
+    private List<TupleEntity> TupleEntitys;
     private ObjectNode objectNode;
     private int uid;
 
     public Translate(ObjectNode objectNode) {
-        this.UTuples = new ArrayList<>();
+        this.TupleEntitys = new ArrayList<>();
         this.uid = 0;
         this.objectNode = objectNode;
     }
 
-    public Translate(List<UTuple> UTuples) {
-        this.UTuples = UTuples;
+    public Translate(List<TupleEntity> TupleEntitys) {
+        this.TupleEntitys = TupleEntitys;
         this.uid = 0;
         ObjectMapper mapper = new ObjectMapper();
         this.objectNode = mapper.createObjectNode();
     }
 
     public void startTrans() {
-        this.UTuples = new ArrayList<>();
+        this.TupleEntitys = new ArrayList<>();
         this.uid = 0;
         this.translatingObj(this.objectNode, "");
     }
@@ -41,11 +41,11 @@ public class Translate {
     public void startBackTrans() {
         ObjectMapper mapper = new ObjectMapper();
         this.objectNode = mapper.createObjectNode();
-        this.backTranslatingTuple(this.UTuples);
+        this.backTranslatingTuple(this.TupleEntitys);
     }
 
-    private void backTranslatingTuple(List<UTuple> uTuples) {
-        for (UTuple uTuple : uTuples) {
+    private void backTranslatingTuple(List<TupleEntity> uTuples) {
+        for (TupleEntity uTuple : uTuples) {
             if (uTuple.getName().contains("[")) { // 当前Tuple为JsonArray
                 backTranslatingArr(uTuple, uTuple.getName());
             }
@@ -58,7 +58,7 @@ public class Translate {
         }
     }
 
-    private void backTranslatingEle(UTuple uTuple) {
+    private void backTranslatingEle(TupleEntity uTuple) {
         this.objectNode.put(uTuple.getName(), uTuple.getVal());
     }
 
@@ -68,7 +68,7 @@ public class Translate {
      * @param uTuple
      * @param prefix
      */
-    private void backTranslatingObj(UTuple uTuple, String prefix) {
+    private void backTranslatingObj(TupleEntity uTuple, String prefix) {
 
         // 通过逆转String的方式获得分割点"."的位置
         StringBuffer sb = new StringBuffer(prefix);
@@ -146,7 +146,7 @@ public class Translate {
      * @param uTuple
      * @param prefix
      */
-    private void backTranslatingArr(UTuple uTuple, String prefix) {
+    private void backTranslatingArr(TupleEntity uTuple, String prefix) {
         // 同上，寻找分割点
         StringBuffer sb = new StringBuffer(prefix);
         String reverse = sb.reverse().toString();
@@ -295,7 +295,7 @@ public class Translate {
             } else if (obj.get(attr) instanceof ArrayNode) {
                 translatingArr((ArrayNode) obj.get(attr), suffix + dot + attr.toString());
             } else {
-                UTuples.add(new UTuple(this.uid, suffix + dot + attr.toString(), obj.get(attr).toString()));
+                TupleEntitys.add(new TupleEntity(this.uid, suffix + dot + attr.toString(), obj.get(attr).toString()));
                 this.uid++;
             }
         }
@@ -311,25 +311,25 @@ public class Translate {
         }
     }
 
-    public ObjectNode getobjectNode() {
+    public ObjectNode getObjectNode() {
         return objectNode;
     }
 
-    public List<UTuple> getUTuples() {
-        return UTuples;
+    public List<TupleEntity> getTupleEntitys() {
+        return TupleEntitys;
     }
 
-    public void setobjectNode(ObjectNode objectNode) {
+    public void setObjectNode(ObjectNode objectNode) {
         this.objectNode = objectNode;
     }
 
-    public void setUTuples(List<UTuple> UTuples) {
-        this.UTuples = UTuples;
+    public void setTupleEntitys(List<TupleEntity> TupleEntitys) {
+        this.TupleEntitys = TupleEntitys;
     }
 
     public void printTuples() {
-        for (UTuple UTuple : UTuples) {
-            UTuple.printTuple();
+        for (TupleEntity TupleEntity : TupleEntitys) {
+            TupleEntity.printTuple();
         }
     }
 }
