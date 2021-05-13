@@ -1,12 +1,8 @@
 package info.nemoworks.udo.repository.jpa.entity;
 
-import java.util.Map;
-
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
+import java.util.Map;
 
 @Entity
 public class FlattenEntity {
@@ -14,8 +10,6 @@ public class FlattenEntity {
     @Id
     protected String id;
 
-    //todo
-    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private Map<String, Object> tuples;
 
     public FlattenEntity() {

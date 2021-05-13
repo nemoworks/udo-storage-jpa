@@ -1,13 +1,12 @@
 package info.nemoworks.udo.repository.jpa;
 
-import info.nemoworks.udo.model.UdoSchema;
+import info.nemoworks.udo.model.Udo;
+import info.nemoworks.udo.model.UdoType;
+import info.nemoworks.udo.repository.jpa.entity.TypeEntity;
+import info.nemoworks.udo.repository.jpa.entity.UdoEntity;
 import info.nemoworks.udo.storage.UdoNotExistException;
 import info.nemoworks.udo.storage.UdoPersistException;
-import info.nemoworks.udo.model.Udo;
 import info.nemoworks.udo.storage.UdoRepository;
-import info.nemoworks.udo.repository.jpa.entity.UdoEntity;
-import info.nemoworks.udo.repository.jpa.entity.SchemaEntity;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -16,18 +15,18 @@ import java.util.List;
 
 @Component
 public class H2UdoWrapperRepository implements UdoRepository {
-    
+
     @Autowired
     private UdoEntityRepository udoEntityRepository;
 
     @Autowired
-    private SchemaEntityRepository schemaEntityRepository;
+    private TypeEntityRepository typeEntityRepository;
 
     @Override
     public Udo saveUdo(Udo udo) throws UdoPersistException {
         UdoEntity entity = UdoEntity.fromUdo(udo);
-        UdoEntity exist = udoEntityRepository.findByUdoId(entity.getUdoId());
-        if (exist != null) throw new UdoPersistException("Udo" + udo.getId() + "already exists.");
+        if (udoEntityRepository.findById(entity.getId()).isPresent())
+            throw new UdoPersistException("Udo" + udo.getId() + "already exists.");
         udoEntityRepository.save(entity);
         return udo;
     }
@@ -35,20 +34,24 @@ public class H2UdoWrapperRepository implements UdoRepository {
     @Override
     public Udo sync(Udo udo) throws UdoPersistException {
         UdoEntity udoEntity = UdoEntity.fromUdo(udo);
-        UdoEntity exist = udoEntityRepository.findByUdoId(udoEntity.getUdoId());
-        if (exist != null) throw new UdoPersistException("Udo" + udo.getId() + "already exists.");
+        if (udoEntityRepository.findById(udoEntity.getId()).isPresent())
+            throw new UdoPersistException("Udo" + udo.getId() + "already exists.");
         udoEntityRepository.save(udoEntity);
         return udo;
     }
 
     @Override
-    public Udo findUdoById(String id) {
-        return udoEntityRepository.findByUdoId(id).toUdo();
+    public Udo findUdoById(String id) throws UdoNotExistException {
+        if (udoEntityRepository.findById(id).isPresent())
+            return udoEntityRepository.findById(id).get().toUdo();
+        else {
+            throw new UdoNotExistException("Udo" + id + "does not exist.");
+        }
     }
 
     @Override
-    public List<Udo> findUdosBySchema(UdoSchema udoSchema) {
-        List<UdoEntity> udoEntities = udoEntityRepository.findAllBySchemaEntity(SchemaEntity.from(udoSchema));
+    public List<Udo> findUdosByType(UdoType udoType) {
+        List<UdoEntity> udoEntities = udoEntityRepository.findAllByTypeEntity(TypeEntity.from(udoType));
         List<Udo> udos = new ArrayList<>();
         for (UdoEntity udoEntity : udoEntities) {
             udos.add(udoEntity.toUdo());
@@ -58,40 +61,52 @@ public class H2UdoWrapperRepository implements UdoRepository {
 
     @Override
     public void deleteUdoById(String id) throws UdoNotExistException {
-        UdoEntity exist = udoEntityRepository.findByUdoId(id);
-        if (exist == null) throw new UdoNotExistException("Udo" + id + "does not exist.");
+        if (!udoEntityRepository.findById(id).isPresent())
+            throw new UdoNotExistException("Udo" + id + "does not exist.");
         udoEntityRepository.deleteByUdoId(id);
     }
 
     @Override
-    public List<UdoSchema> findAllSchemas() {
-        List<SchemaEntity> schemas = schemaEntityRepository.findAll();
-        List<UdoSchema> udoSchemas = new ArrayList<>();
-        for (SchemaEntity schema : schemas) {
-            udoSchemas.add(schema.toUdoSchema());
+    public List<UdoType> findAllTypes() {
+        List<TypeEntity> types = typeEntityRepository.findAll();
+        List<UdoType> udoTypes = new ArrayList<>();
+        for (TypeEntity type : types) {
+            udoTypes.add(type.toUdoType());
         }
-        return udoSchemas;
+        return udoTypes;
     }
 
     @Override
-    public UdoSchema findSchemaById(String id) {
-        return schemaEntityRepository.findBySchemaId(id).toUdoSchema();
+    public UdoType findTypeById(String id) throws UdoNotExistException {
+        if (!typeEntityRepository.findById(id).isPresent())
+            throw new UdoNotExistException("Type" + id + "does not exist.");
+        return typeEntityRepository.findById(id).get().toUdoType();
     }
 
     @Override
-    public UdoSchema saveSchema(UdoSchema udoSchema) throws UdoPersistException{
-        SchemaEntity schemaEntity = SchemaEntity.from(udoSchema);
-        SchemaEntity exist = schemaEntityRepository.findBySchemaId(schemaEntity.getSchemaId());
-        if (exist != null) throw new UdoPersistException("Schema" + udoSchema.getId() + "already exists.");
-        schemaEntityRepository.save(schemaEntity);
-        return udoSchema;
+    public UdoType saveType(UdoType udoType) throws UdoPersistException {
+        TypeEntity typeEntity = TypeEntity.from(udoType);
+        if (typeEntityRepository.findById(udoType.getId()).isPresent())
+            throw new UdoPersistException("Type" + udoType.getId() + "already exists.");
+        typeEntityRepository.save(typeEntity);
+        return udoType;
     }
 
     @Override
-    public void deleteSchemaById(String id) throws UdoNotExistException {
-        SchemaEntity exist = schemaEntityRepository.findBySchemaId(id);
-        if (exist == null) throw new UdoNotExistException("Schema" + id + "does not exist.");
-        schemaEntityRepository.deleteBySchemaId(id);
+    public void deleteTypeById(String id) throws UdoNotExistException {
+        if (typeEntityRepository.findById(id).isPresent())
+            throw new UdoNotExistException("Type" + id + "already exists.");
+        typeEntityRepository.deleteById(id);
+    }
+
+    @Override
+    public List<Udo> findAllUdos() {
+        List<UdoEntity> udoEntities = udoEntityRepository.findAll();
+        List<Udo> udos = new ArrayList<>();
+        for (UdoEntity udoEntity : udoEntities) {
+            udos.add(udoEntity.toUdo());
+        }
+        return udos;
     }
 
 

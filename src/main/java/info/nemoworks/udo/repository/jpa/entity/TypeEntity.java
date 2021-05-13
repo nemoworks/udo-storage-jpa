@@ -1,10 +1,12 @@
 package info.nemoworks.udo.repository.jpa.entity;
 
-import javax.persistence.Entity;
-
 import com.github.wnameless.json.flattener.JsonFlattener;
-
+import com.github.wnameless.json.unflattener.JsonUnflattener;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import info.nemoworks.udo.model.UdoType;
+
+import javax.persistence.Entity;
 
 @Entity
 public class TypeEntity extends FlattenEntity {
@@ -19,11 +21,11 @@ public class TypeEntity extends FlattenEntity {
     }
 
     public UdoType toUdoType() {
-        // Translate translate = new Translate(this.getTupleEntitys());
-        // translate.startBackTrans();
-        // UdoSchema udoSchema = new UdoSchema(translate.getObjectNode());
-        // udoSchema.setId(this.schemaId);
-        // return udoSchema;
-        return null;
+
+        String unFlattenedType = JsonUnflattener.unflatten(this.getTuples());
+        JsonObject type = new Gson().fromJson(unFlattenedType, JsonObject.class);
+        UdoType udoType = new UdoType(type);
+        udoType.setId(id);
+        return udoType;
     }
 }

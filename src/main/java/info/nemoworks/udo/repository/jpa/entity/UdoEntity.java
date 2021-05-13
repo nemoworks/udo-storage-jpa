@@ -1,14 +1,15 @@
 package info.nemoworks.udo.repository.jpa.entity;
 
-import java.util.Map;
-
-import javax.persistence.Entity;
-
 import com.github.wnameless.json.flattener.JsonFlattener;
-
+import com.github.wnameless.json.unflattener.JsonUnflattener;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import info.nemoworks.udo.model.Udo;
+import info.nemoworks.udo.model.UdoType;
 import org.springframework.context.annotation.Lazy;
 
-import info.nemoworks.udo.model.Udo;
+import javax.persistence.Entity;
+import java.util.Map;
 
 @Entity
 public class UdoEntity extends FlattenEntity {
@@ -35,13 +36,10 @@ public class UdoEntity extends FlattenEntity {
     }
 
     public static UdoEntity fromUdo(Udo udo) {
-       
-        UdoEntity udoEntity = new UdoEntity();
-        TypeEntity typeEntity = new TypeEntity();
 
-        typeEntity.setId(udo.getType().getId());
-        typeEntity.setTuples(JsonFlattener.flattenAsMap(udo.getType().getSchema().getAsString()));
-        
+        UdoEntity udoEntity = new UdoEntity();
+        TypeEntity typeEntity = TypeEntity.from(udo.getType());
+
 
         udoEntity.setId(udo.getId());
         udoEntity.setTypeEntity(typeEntity);
@@ -52,7 +50,12 @@ public class UdoEntity extends FlattenEntity {
     }
 
     public Udo toUdo() {
-       
-        return null;
+        String unFlattenedData = JsonUnflattener.unflatten(this.getTuples());
+        JsonObject data = new Gson().fromJson(unFlattenedData, JsonObject.class);
+        UdoType udoType = this.typeEntity.toUdoType();
+        udoType.setId(this.typeEntity.getId());
+        Udo udo = new Udo(udoType, data);
+        udo.setId(id);
+        return udo;
     }
 }

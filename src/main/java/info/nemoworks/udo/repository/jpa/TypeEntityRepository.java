@@ -1,18 +1,18 @@
 package info.nemoworks.udo.repository.jpa;
 
+import info.nemoworks.udo.repository.jpa.entity.TypeEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import info.nemoworks.udo.repository.jpa.entity.SchemaEntity;
-
 import java.util.List;
+import java.util.Optional;
 
 @Component
-public interface SchemaEntityRepository extends JpaRepository<SchemaEntity, String> {
-    SchemaEntity findBySchemaId(String schemaId);
+public interface TypeEntityRepository extends JpaRepository<TypeEntity, String> {
+    Optional<TypeEntity> findById(String schemaId);
 
-    List<SchemaEntity> findAll();
+    List<TypeEntity> findAll();
 
     @Transactional
     void deleteBySchemaId(String schemaId);
