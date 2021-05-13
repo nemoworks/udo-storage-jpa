@@ -43,7 +43,7 @@ public class UdoEntity extends FlattenEntity {
 
         udoEntity.setId(udo.getId());
         udoEntity.setTypeEntity(typeEntity);
-        udoEntity.setTuples(JsonFlattener.flattenAsMap(udo.getData().getAsString()));
+        udoEntity.setTuples(JsonFlattener.flattenAsMap(new Gson().toJson(udo.getData())));
 
         return udoEntity;
 

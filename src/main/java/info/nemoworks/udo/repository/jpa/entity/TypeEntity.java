@@ -15,7 +15,7 @@ public class TypeEntity extends FlattenEntity {
 
         TypeEntity type = new TypeEntity();
         type.setId(udoType.getId());
-        type.setTuples(JsonFlattener.flattenAsMap(udoType.getSchema().getAsString()));
+        type.setTuples(JsonFlattener.flattenAsMap(new Gson().toJson(udoType.getSchema())));
         return type;
 
     }

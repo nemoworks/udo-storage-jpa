@@ -37,4 +37,8 @@ public class FlattenEntity {
         this.tuples = tuples;
     }
 
+    public void printTuples() {
+        this.tuples.forEach((key, value) -> System.out.println(key + ": " + value));
+    }
+
 }

@@ -1,24 +1,16 @@
 package info.nemoworks.udo.repository.jpa;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import info.nemoworks.udo.model.Udo;
-import info.nemoworks.udo.model.UdoSchema;
-import info.nemoworks.udo.repository.jpa.entity.Translate;
-import info.nemoworks.udo.storage.UdoNotExistException;
-import info.nemoworks.udo.storage.UdoPersistException;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import info.nemoworks.udo.model.UdoType;
+import info.nemoworks.udo.repository.jpa.entity.TypeEntity;
 import org.junit.jupiter.api.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
 //@SpringBootTest
-@RunWith(SpringJUnit4ClassRunner.class)
 class StorageTests {
 
 //    @Autowired(required = true)
@@ -34,31 +26,29 @@ class StorageTests {
 
     @Test
     public void translatingTest() throws IOException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode obj = objectMapper.readTree(this.loadFromFile("src/test/resources/test0.json"));
-        Translate translate = new Translate((ObjectNode) obj);
-        translate.startTrans();
-        System.out.println(translate.getTupleEntitys());
-        translate.printTuples();
-        translate.startBackTrans();
-        System.out.println(translate.getObjectNode());
+        JsonObject testObj = new Gson().fromJson(this.loadFromFile("src/test/resources/test0.json"), JsonObject.class);
+        UdoType udoType = new UdoType(testObj);
+        udoType.setId("t-01");
+        TypeEntity typeEntity = TypeEntity.from(udoType);
+        typeEntity.printTuples();
+        UdoType test = typeEntity.toUdoType();
+        System.out.println(new Gson().toJson(test.getSchema()));
     }
 
 //    @Test
 //    public void udoStorageTest() throws IOException, UdoPersistException, UdoNotExistException {
-//        ObjectMapper objectMapper = new ObjectMapper();
-//        JsonNode obj = objectMapper.readTree(this.loadFromFile("src/test/resources/light.json"));
-//        UdoSchema udoSchema = new UdoSchema(obj);
-//        udoSchema.setId("s-01");
-//        System.out.println(h2UdoWrapperRepository.saveSchema(udoSchema));
-//        System.out.println(h2UdoWrapperRepository.findAllSchemas());
-//        System.out.println(h2UdoWrapperRepository.findSchemaById("s-01"));
-//        Udo udo = new Udo(udoSchema, obj);
+//        JsonObject obj = new Gson().fromJson(this.loadFromFile("src/test/resources/light.json"), JsonObject.class);
+//        UdoType udoType = new UdoType(obj);
+//        udoType.setId("s-01");
+//        System.out.println(h2UdoWrapperRepository.saveType(udoType));
+//        System.out.println(h2UdoWrapperRepository.findAllTypes());
+//        System.out.println(h2UdoWrapperRepository.findTypeById("s-01"));
+//        Udo udo = new Udo(udoType, obj);
 //        udo.setId("d-01");
 //        System.out.println(h2UdoWrapperRepository.saveUdo(udo));
 //        System.out.println(h2UdoWrapperRepository.findUdoById("d-01"));
-//        System.out.println(h2UdoWrapperRepository.findUdosBySchema(udoSchema));
+//        System.out.println(h2UdoWrapperRepository.findUdosByType(udoType));
 //        h2UdoWrapperRepository.deleteUdoById("d-01");
-//        h2UdoWrapperRepository.deleteSchemaById("s-01");
+//        h2UdoWrapperRepository.deleteTypeById("s-01");
 //    }
 }
