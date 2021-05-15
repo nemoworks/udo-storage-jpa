@@ -1,7 +1,9 @@
 package info.nemoworks.udo.repository.jpa.entity;
 
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import java.util.HashMap;
 import java.util.Map;
 
 @Entity
@@ -10,7 +12,13 @@ public class FlattenEntity {
     @Id
     protected String id;
 
-    private Map<String, Object> tuples;
+    //    @OneToMany
+//    @ElementCollection
+//    @CollectionTable(name = "attributes", joinColumns = @JoinColumn(name = "id"))
+//    @MapKeyColumn(name = "key")
+//    @Column(name = "value")
+    @Convert(converter = Converter.class)
+    private Map<String, Object> tuples = new HashMap<>();
 
     public FlattenEntity() {
 

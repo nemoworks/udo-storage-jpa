@@ -8,12 +8,12 @@ import info.nemoworks.udo.storage.UdoNotExistException;
 import info.nemoworks.udo.storage.UdoPersistException;
 import info.nemoworks.udo.storage.UdoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Component
+@Service("WrapperService")
 public class H2UdoWrapperRepository implements UdoRepository {
 
     @Autowired
@@ -63,7 +63,7 @@ public class H2UdoWrapperRepository implements UdoRepository {
     public void deleteUdoById(String id) throws UdoNotExistException {
         if (!udoEntityRepository.findById(id).isPresent())
             throw new UdoNotExistException("Udo" + id + "does not exist.");
-        udoEntityRepository.deleteByUdoId(id);
+        udoEntityRepository.deleteById(id);
     }
 
     @Override

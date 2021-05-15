@@ -9,12 +9,14 @@ import info.nemoworks.udo.model.UdoType;
 import org.springframework.context.annotation.Lazy;
 
 import javax.persistence.Entity;
+import javax.persistence.OneToOne;
 import java.util.Map;
 
 @Entity
 public class UdoEntity extends FlattenEntity {
 
     @Lazy
+    @OneToOne(targetEntity = TypeEntity.class)
     private TypeEntity typeEntity;
 
     public UdoEntity() {
