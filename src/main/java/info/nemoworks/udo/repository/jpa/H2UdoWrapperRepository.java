@@ -60,6 +60,11 @@ public class H2UdoWrapperRepository implements UdoRepository {
     }
 
     @Override
+    public List<Udo> findUdosByTypeId(String udoTypeId) {
+        return null;
+    }
+
+    @Override
     public void deleteUdoById(String id) throws UdoNotExistException {
         if (!udoEntityRepository.findById(id).isPresent())
             throw new UdoNotExistException("Udo" + id + "does not exist.");

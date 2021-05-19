@@ -2,6 +2,7 @@ package info.nemoworks.udo.repository.jpa;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import info.nemoworks.udo.model.MetaInfo;
 import info.nemoworks.udo.model.Udo;
 import info.nemoworks.udo.model.UdoType;
 import info.nemoworks.udo.repository.jpa.entity.TypeEntity;
@@ -62,15 +63,23 @@ class StorageTests {
     public void udoStorageTest() throws IOException, UdoNotExistException, UdoPersistException {
         JsonObject obj = new Gson().fromJson(this.loadFromFile("src/test/resources/light.json"), JsonObject.class);
         UdoType udoType = new UdoType(obj);
+        MetaInfo metaInfo = new MetaInfo() {
+            {
+                this.createdBy = "nemoworks";
+            }
+        };
         udoType.setId("s-01");
+        udoType.setMetaInfo(metaInfo);
         typeEntityRepository.save(TypeEntity.from(udoType)).printTuples();
         System.out.println(typeEntityRepository.findById("s-01").isPresent());
+
 //        System.out.println(typeEntityRepository.findAll());
 //        System.out.println(h2UdoWrapperRepository.saveType(udoType));
 //        System.out.println(h2UdoWrapperRepository.findAllTypes());
 //        System.out.println(h2UdoWrapperRepository.findTypeById("s-01"));
         Udo udo = new Udo(udoType, obj);
         udo.setId("d-01");
+        udo.setMetaInfo(metaInfo);
         udoEntityRepository.save(UdoEntity.fromUdo(udo)).printTuples();
 //        System.out.println(udoEntityRepository.save(UdoEntity.fromUdo(udo)));
         System.out.println(udoEntityRepository.findById("d-01").isPresent());

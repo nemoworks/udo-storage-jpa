@@ -4,6 +4,7 @@ import com.github.wnameless.json.flattener.JsonFlattener;
 import com.github.wnameless.json.unflattener.JsonUnflattener;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import info.nemoworks.udo.model.MetaInfo;
 import info.nemoworks.udo.model.Udo;
 import info.nemoworks.udo.model.UdoType;
 import org.springframework.context.annotation.Lazy;
@@ -46,7 +47,8 @@ public class UdoEntity extends FlattenEntity {
         udoEntity.setId(udo.getId());
         udoEntity.setTypeEntity(typeEntity);
         udoEntity.setTuples(JsonFlattener.flattenAsMap(new Gson().toJson(udo.getData())));
-
+//        udoEntity.setMetaInfo(udo.getMetaInfo());
+        udoEntity.setCreatedBy(udo.getMetaInfo().createdBy);
         return udoEntity;
 
     }
@@ -58,6 +60,10 @@ public class UdoEntity extends FlattenEntity {
         udoType.setId(this.typeEntity.getId());
         Udo udo = new Udo(udoType, data);
         udo.setId(id);
+        udo.setMetaInfo(new MetaInfo() {{
+            this.createdBy = getCreatedBy();
+        }});
+//        udo.setMetaInfo(this.getMetaInfo());
         return udo;
     }
 }
