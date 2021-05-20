@@ -2,7 +2,6 @@ package info.nemoworks.udo.repository.jpa;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import info.nemoworks.udo.model.MetaInfo;
 import info.nemoworks.udo.model.Udo;
 import info.nemoworks.udo.model.UdoType;
 import info.nemoworks.udo.repository.jpa.entity.TypeEntity;
@@ -18,6 +17,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+
+//import info.nemoworks.udo.model.MetaInfo;
 
 //@SpringBootTest(classes = {info.nemoworks.udo.repository.jpa.TypeEntityRepository.class
 //        , info.nemoworks.udo.repository.jpa.UdoEntityRepository.class
@@ -63,13 +64,14 @@ class StorageTests {
     public void udoStorageTest() throws IOException, UdoNotExistException, UdoPersistException {
         JsonObject obj = new Gson().fromJson(this.loadFromFile("src/test/resources/light.json"), JsonObject.class);
         UdoType udoType = new UdoType(obj);
-        MetaInfo metaInfo = new MetaInfo() {
-            {
-                this.createdBy = "nemoworks";
-            }
-        };
+//        MetaInfo metaInfo = new MetaInfo() {
+//            {
+//                this.createdBy = "nemoworks";
+//            }
+//        };
         udoType.setId("s-01");
-        udoType.setMetaInfo(metaInfo);
+//        udoType.setMetaInfo(metaInfo);
+        udoType.setCreatedBy("nemoworks");
         typeEntityRepository.save(TypeEntity.from(udoType)).printTuples();
         System.out.println(typeEntityRepository.findById("s-01").isPresent());
 
@@ -79,7 +81,8 @@ class StorageTests {
 //        System.out.println(h2UdoWrapperRepository.findTypeById("s-01"));
         Udo udo = new Udo(udoType, obj);
         udo.setId("d-01");
-        udo.setMetaInfo(metaInfo);
+//        udo.setMetaInfo(metaInfo);
+        udo.setCreatedBy("nemoworks");
         udoEntityRepository.save(UdoEntity.fromUdo(udo)).printTuples();
 //        System.out.println(udoEntityRepository.save(UdoEntity.fromUdo(udo)));
         System.out.println(udoEntityRepository.findById("d-01").isPresent());
