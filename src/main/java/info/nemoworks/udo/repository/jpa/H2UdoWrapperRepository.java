@@ -50,14 +50,14 @@ public class H2UdoWrapperRepository implements UdoRepository {
         }
     }
 
-    @Override
-    public Udo findUdoByUri(String uri) throws UdoNotExistException {
-        if (udoEntityRepository.findByUri(uri).isPresent()) {
-            return udoEntityRepository.findByUri(uri).get().toUdo();
-        } else {
-            throw new UdoNotExistException("Udo" + uri + "does not exist.");
-        }
-    }
+//    @Override
+//    public Udo findUdoByUri(String uri) throws UdoNotExistException {
+//        if (udoEntityRepository.findByUri(uri).isPresent()) {
+//            return udoEntityRepository.findByUri(uri).get().toUdo();
+//        } else {
+//            throw new UdoNotExistException("Udo" + uri + "does not exist.");
+//        }
+//    }
 
     @Override
     public List<Udo> findUdosByType(UdoType udoType) {
